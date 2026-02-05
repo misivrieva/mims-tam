@@ -13,9 +13,8 @@ sub vcl_recv {
 
   if (req.restarts == 0) {
   unset req.http.restarts;
-  }
-
-  if (req.restarts > 0) {
+  unset req.http.try-alt-origin;
+  }  elsif (req.http.try-alt-origin) {
   # Ensure clustering runs on restart!
   set req.http.Fastly-Force-Shield = "1";
   set req.backend = F_github_pages;
@@ -27,7 +26,7 @@ sub vcl_recv {
 
   # Check if the client's country is in the blocklist
   declare local var.country_status STRING;
-  set var.country_status = table.lookup(country_blocklist, client.geo.country_name);
+  set var.country_status = table.lookup(basic_geofencing, client.geo.country_name);
   
   if (var.country_status == "block") {
     error 403 "Access denied from your country";
@@ -51,6 +50,14 @@ sub vcl_hit {
 
 sub vcl_miss {
 #FASTLY miss
+
+if (req.backend.is_origin) {
+  if (req.http.try-alt-origin) {
+    set bereq.url = "/status/200"; # Success path
+  } else {
+    set bereq.url = "/status/503"; # Failing path
+  }
+}
 if (req.restarts > 0) {
 set bereq.http.host = "misivrieva.github.io";
 }
@@ -108,7 +115,16 @@ sub vcl_fetch {
   if (beresp.status >= 500 && beresp.status < 600) {
     if (stale.exists) {
     return(deliver_stale);
+    } elseif (http_status_matches(beresp.status, "500,502,503,504")
+        && req.backend.is_origin
+        && !req.http.try-alt-origin
+    ){
+        set beresp.http.Vary:restarts = ""; # Add restart to vary key
+        set beresp.cacheable = true; # Errors are not cacheable by default, so enable them
+        set beresp.ttl = 5s; # Set a short ttl so the unfindable object expires quickly
+        set beresp.http.do_failover = "yes";
     }
+    return(deliver);
   }   
 
 call surrogate_keys;
@@ -163,7 +179,7 @@ set beresp.http.surrogate-key = req.url.basename;
 
   # Match last segment: 
   if (req.url.path ~ "^.*/([^/]+)$") {
-    # re.group.1 = full-path
+    # re.group.1 = full-path 
     set beresp.http.Surrogate-Key = re.group.1;
   }
 
@@ -176,10 +192,8 @@ set beresp.http.surrogate-key = req.url.basename;
     {
            if (!re.group.2) { goto surrogate_1; }
 
-      surrogate_2: set beresp.http.Surrogate-Key = beresp.http.Surrogate-Key " " re.group.2;
-      surrogate_1: set beresp.http.Surrogate-Key = beresp.http.Surrogate-Key " " re.group.1;
-    
-    
+            surrogate_2: set beresp.http.Surrogate-Key = beresp.http.Surrogate-Key " " re.group.2;
+            surrogate_1: set beresp.http.Surrogate-Key = beresp.http.Surrogate-Key " " re.group.1;
     } 
   }
 }
