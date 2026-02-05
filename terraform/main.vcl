@@ -8,7 +8,7 @@ sub vcl_recv {
   }
   #default, go to bin 
   set req.backend = F_http_me;
-  set bereq.http.host = "http-me.glitch.me";
+  set req.http.host = "http-me.glitch.me";
 
 
   if (req.restarts == 0) {
@@ -20,9 +20,7 @@ sub vcl_recv {
   set req.http.Fastly-Force-Shield = "1";
   set req.backend = F_github_pages;
   set req.http.restarts = req.restarts;
-  set bereq.http.host = "misivrieva.github.io";
-
-  return(lookup)
+  return(lookup);
   }
 
   #basic_geofencing in action 
@@ -53,6 +51,10 @@ sub vcl_hit {
 
 sub vcl_miss {
 #FASTLY miss
+if (req.restarts > 0) {
+set bereq.http.host = "misivrieva.github.io";
+}
+
   return(fetch);
 }
 
@@ -87,12 +89,14 @@ sub vcl_fetch {
   }
 
   # Do not cache anything but static assets
-  if (beresp.http.Cache-Control !~"(?:s-maxage|max-age)" && req.url != "/graphql" && req.url.ext !~ "(?i)(css|js|gif|jpg|jpeg|bmp|png|ico|img|tga|webp|wmf|mp4)") {
+  if (beresp.http.Cache-Control !~"(?:s-maxage|max-age)" && req.url != "/graphql" && (req.url ~ "(?i)(css|js|gif|jpg|jpeg|bmp|png|ico|img|tga|webp|wmf|mp4)$")) {
   return (pass);
 }
 
   # If no TTL has been provided in the response headers, set a default
-  if (!beresp.http.Expires && !beresp.http.Surrogate-Control ~ "max-age" && !beresp.http.Cache-Control ~ "(?:s-maxage|max-age)") {
+  if (!beresp.http.Expires &&
+    !(beresp.http.Surrogate-Control ~ "max-age") &&
+    !(beresp.http.Cache-Control ~ "(?:s-maxage|max-age)") ) { {
     set beresp.ttl = 3600s;
 
     # Apply a longer default TTL for images processed using Image Optimizer
@@ -109,8 +113,8 @@ sub vcl_fetch {
 
 call surrogate_keys;
 return(deliver);
- 
-} 
+}
+
 
 sub vcl_error {
 #FASTLY error
@@ -255,14 +259,12 @@ log "syslog " req.service_id " syslog :: { "
     "%22origin_status%22:" + if(req.http.log-origin:status,json.escape(req.http.log-origin:status),"null") + ", " +
     "%22origin_ttfb%22:" + if(req.http.log-origin:ttfb == "NaN", "null", req.http.log-origin:ttfb) + ", " +
     "%22origin_ttlb%22:" + if(req.http.log-origin:ttlb == "NaN", "null", req.http.log-origin:ttlb) + ", " +
-    "%22origin_url%22:" + if(req.http.log-origin:url,"%22" + json.escape(req.http.log-origin:url) + "%22","null") + ", " +
-    "%22request_host%22:%22" + json.escape(req.http.log-request:host) + "%22, " +
+    "%22origin_url%22:" + if(req.http.log-origin:url,"%22" + json.escape(req.http.log-origin:url) + "%22","null") + ", "  + "%22, " +
     {""request_is_h2": ""} + json.escape(if(fastly_info.is_h2, "true", "false")) + "%22, " +
     {""request_is_ipv6": ""} + json.escape(if(req.is_ipv6, "true", "false")) + "%22, " +
     "%22request_method%22:%22" + json.escape(req.http.log-request:method) + "%22, " +
     "%22request_referer%22:%22" + if(req.http.referer, "%22" + json.escape(req.http.referer) + "%22", "null") + "%22, " +
-    "%22request_tls_version%22:%22" + json.escape(if(tls.client.protocol, tls.client.protocol, "")) + "%22, " +
-    "%22request_url%22:%22" + json.escape(req.http.log-request:url) + "%22, " +
+    "%22request_tls_version%22:%22" + json.escape(if(tls.client.protocol, tls.client.protocol, "")) + "%22, " + "%22, " +
     "%22request_user_agent%22:" + if(req.http.user-agent, "%22" + json.escape(req.http.user-agent) + "%22", "null") + ", " +
     "%22response_age%22:" + regsub(obj.age, "\.000$", "") + ", " +
     "%22response_bytes_body%22:" + resp.body_bytes_written + ", " +

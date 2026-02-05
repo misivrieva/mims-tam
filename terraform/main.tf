@@ -81,6 +81,7 @@ provider "fastly" {
 
     dictionary {
       name    = "basic_geofencing" 
+      write_only = false
     }
   }  
 
