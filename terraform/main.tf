@@ -17,7 +17,7 @@ provider "fastly" {
   name = "mims_tam_website"
 
 domain {
-    name = "misivrieva.github.io"
+    name = "mims-tam-test.global.ssl.fastly.net"
   }
 
 backend {
@@ -57,6 +57,14 @@ backend {
     shield = "london-uk"
 
   }
+
+  condition {
+    name      = "Failover"
+    type      = "REQUEST"
+    statement = "beresp.status >= 500 || beresp.status == 0"
+    priority  = 10
+  }
+
 
 
   force_destroy = false
