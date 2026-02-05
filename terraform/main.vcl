@@ -155,8 +155,7 @@ set resp.http.X-Mims = "mims";
 }
 
 sub vcl_log {
-#FASTLY log
-
+#FASTLY log    
 
   set req.http.log-timing:log = time.elapsed.usec;
 
@@ -164,38 +163,28 @@ sub vcl_log {
   declare local var.origin_ttlb FLOAT;
 
   if (fastly_info.state ~ "^(MISS|PASS)") {
-    # origin_ttfb = fetch - misspass
     set var.origin_ttfb = std.atof(req.http.log-timing:fetch);
     set var.origin_ttfb -= std.atof(req.http.log-timing:misspass);
 
     if (req.http.log-timing:do_stream == "1") {
-        # origin_ttlb = log - misspass
-        # (and some clustering)
-        set var.origin_ttlb = std.atof(req.http.log-timing:log);
-        set var.origin_ttlb -= std.atof(req.http.log-timing:misspass);
+      set var.origin_ttlb = std.atof(req.http.log-timing:log);
+      set var.origin_ttlb -= std.atof(req.http.log-timing:misspass);
+    } else {
+      set var.origin_ttlb = std.atof(req.http.log-timing:deliver);
+      set var.origin_ttlb -= std.atof(req.http.log-timing:misspass);
     }
-    else {
-        # origin_ttlb = deliver - misspass
-        # (and some clustering)
-        set var.origin_ttlb = std.atof(req.http.log-timing:deliver);
-        set var.origin_ttlb -= std.atof(req.http.log-timing:misspass);
-    }
-  }
-  else {
+  } else {
     unset req.http.log-timing:conn_open_fetch;
     unset req.http.log-timing:conn_used_fetch;
   }
 
-
   set var.origin_ttfb /= 1000;
   set var.origin_ttlb /= 1000;
 
-  # ttfb = time.to_first_byte (just before deliver)
   declare local var.response_ttfb FLOAT;
   set var.response_ttfb = time.to_first_byte;
   set var.response_ttfb *= 1000;
 
-  # ttlb = log
   declare local var.response_ttlb FLOAT;
   set var.response_ttlb = std.atof(req.http.log-timing:log);
   set var.response_ttlb /= 1000;
@@ -204,7 +193,6 @@ sub vcl_log {
   set var.client_tcpi_rtt = client.socket.tcpi_rtt;
   set var.client_tcpi_rtt /= 1000;
 
-  # Only log origin/shield info if we actually went to origin/shield
   if (fastly_info.state !~ "^(MISS|PASS)") {
     unset req.http.log-origin:host;
     unset req.http.log-origin:ip;
@@ -225,68 +213,59 @@ sub vcl_log {
   set req.http.log-response:ttfb = var.response_ttfb;
   set req.http.log-response:ttlb = var.response_ttlb;
 
-#sylog format logs that will stream to the terminal
-
-log "syslog " req.service_id " syslog :: { "
-    "%22timestamp%22:%22" + json.escape(strftime({"%Y-%m-%dT%H:%M:%S"}, time.start) + ":" + time.start.usec_frac) + {"Z", "} +
-    "%22client_as_number%22:" + json.escape(client.as.number) + ", " +
-    "%22client_city%22:%22" + json.escape(client.geo.city) + "%22, " +
-    "%22client_congestion_algorithm%22:%22" + json.escape(client.socket.congestion_algorithm) + "%22, " +
-    "%22client_country_code%22:%22" + json.escape(client.geo.country_code3) + "%22, " +
-    "%22client_cwnd%22:" + json.escape(client.socket.cwnd) + ", " +
-    "%22client_delivery_rate%22:" + json.escape(client.socket.tcpi_delivery_rate) + ", " +
-
-    "%22client_ip%22:%22" + json.escape(req.http.Fastly-Client-IP) + "%22, " +
-    "%22client_ip_alt%22:%22" + json.escape(client.ip) + "%22, " +
-
-    "%22client_latitude%22:" + json.escape(if(client.geo.latitude == 999.9, "null", client.geo.latitude)) + ", " +
-    "%22client_longitude%22:" + json.escape(if(client.geo.longitude == 999.9, "null", client.geo.longitude)) + ", " +
-    "%22client_ploss%22:" + json.escape(client.socket.ploss) + ", " +
-    "%22client_requests%22:" + json.escape(client.requests) + ", " +
-    "%22client_retrans%22:" + json.escape(client.socket.tcpi_delta_retrans) + ", " +
-    "%22client_rtt%22:" + json.escape(req.http.log-client:tcpi_rtt) + ", " +
-    "%22fastly_is_edge%22:" + json.escape(if(fastly.ff.visits_this_service == 0, "true", "false")) + ", " +
-    "%22fastly_is_shield%22:" + json.escape(if(req.http.log-origin:shield == server.datacenter, "true", "false")) + ", " +
-    "%22fastly_pop%22:%22" + json.escape(server.datacenter) + "%22, " +
-    "%22fastly_server%22:%22" + json.escape(server.hostname) + "%22, " +
-    "%22fastly_shield_used%22:" + if(req.http.log-origin:shield, "%22" + req.http.log-origin:shield + "%22", "null") + ", " +
-    "%22origin_host%22:" + if(req.http.log-origin:host,"%22" + json.escape(req.http.log-origin:host) + "%22","null") + ", " +
-    "%22origin_ip%22:" + if(req.http.log-origin:ip,"%22" + json.escape(req.http.log-origin:ip) + "%22","null") + ", " +
-    "%22origin_method%22:" + if(req.http.log-origin:method,"%22" + json.escape(req.http.log-origin:method) + "%22","null") + ", " +
-    "%22origin_name%22:" + if(req.http.log-origin:name,"%22" + json.escape(req.http.log-origin:name) + "%22","null") + ", " +
-    "%22origin_port%22:" + if(req.http.log-origin:port,req.http.log-origin:port,"null") + ", " +
-    "%22origin_reason%22:" + if(req.http.log-origin:reason,"%22" + json.escape(req.http.log-origin:reason) + "%22","null") + ", " +
-    "%22origin_status%22:" + if(req.http.log-origin:status,json.escape(req.http.log-origin:status),"null") + ", " +
-    "%22origin_ttfb%22:" + if(req.http.log-origin:ttfb == "NaN", "null", req.http.log-origin:ttfb) + ", " +
-    "%22origin_ttlb%22:" + if(req.http.log-origin:ttlb == "NaN", "null", req.http.log-origin:ttlb) + ", " +
-    "%22origin_url%22:" + if(req.http.log-origin:url,"%22" + json.escape(req.http.log-origin:url) + "%22","null") + ", "  + "%22, " +
-    {""request_is_h2": ""} + json.escape(if(fastly_info.is_h2, "true", "false")) + "%22, " +
-    {""request_is_ipv6": ""} + json.escape(if(req.is_ipv6, "true", "false")) + "%22, " +
-    "%22request_method%22:%22" + json.escape(req.http.log-request:method) + "%22, " +
-    "%22request_referer%22:%22" + if(req.http.referer, "%22" + json.escape(req.http.referer) + "%22", "null") + "%22, " +
-    "%22request_tls_version%22:%22" + json.escape(if(tls.client.protocol, tls.client.protocol, "")) + "%22, " + "%22, " +
-    "%22request_user_agent%22:" + if(req.http.user-agent, "%22" + json.escape(req.http.user-agent) + "%22", "null") + ", " +
-    "%22response_age%22:" + regsub(obj.age, "\.000$", "") + ", " +
-    "%22response_bytes_body%22:" + resp.body_bytes_written + ", " +
-    "%22response_bytes_header%22:" + resp.header_bytes_written + ", " +
-    "%22response_bytes%22:" + resp.bytes_written + ", " +
-    "%22response_cache_control%22:" + if(resp.http.cache-control, "%22" + json.escape(resp.http.cache-control) + "%22", "null") + ", " +
-    "%22response_completed%22:%22" + if(resp.completed, "true", "false") + "%22, " +
-    "%22response_content_length%22:" + if(resp.http.content-length, resp.http.content-length, "null") + ", " +
-    "%22response_content_type%22:" + if(resp.http.content-type, "%22" + json.escape(resp.http.content-type) + "%22", "null") + ", " +
-    "%22response_reason%22:" + if(resp.response,"%22" + json.escape(resp.response) + "%22","null") + ", " +
-    "%22response_state%22:%22" + fastly_info.state + "%22, " +
-    "%22response_status%22:" + resp.status + ", " +
-    "%22response_ttfb%22:" + req.http.log-response:ttfb + ", "
-    "%22response_ttl%22:" + obj.ttl + ", "
-    "%22response_ttlb%22:" + req.http.log-response:ttlb + ""
-
-    {","log-timing":""} req.http.log-timing {"""}
-    {","origin_conn_open":"} std.atoi(req.http.log-timing:conn_open)
-    {","origin_conn_used":"} std.atoi(req.http.log-timing:conn_used)
-    {","origin_conn_open_fetch":"} std.atoi(req.http.log-timing:conn_open_fetch)
-    {","origin_conn_used_fetch":"} std.atoi(req.http.log-timing:conn_used_fetch)
-  "}";
-
+  log "syslog " req.service_id " syslog :: { "
+      "\"timestamp\":\"" + json.escape(strftime({"%Y-%m-%dT%H:%M:%S"}, time.start) + ":" + time.start.usec_frac) + "Z\", "
+      "\"client_as_number\":" + json.escape(client.as.number) + ", "
+      "\"client_city\":\"" + json.escape(client.geo.city) + "\", "
+      "\"client_congestion_algorithm\":\"" + json.escape(client.socket.congestion_algorithm) + "\", "
+      "\"client_country_code\":\"" + json.escape(client.geo.country_code3) + "\", "
+      "\"client_cwnd\":" + json.escape(client.socket.cwnd) + ", "
+      "\"client_delivery_rate\":" + json.escape(client.socket.tcpi_delivery_rate) + ", "
+      "\"client_ip\":\"" + json.escape(req.http.Fastly-Client-IP) + "\", "
+      "\"client_ip_alt\":\"" + json.escape(client.ip) + "\", "
+      "\"client_latitude\":" + json.escape(if(client.geo.latitude == 999.9, "null", client.geo.latitude)) + ", "
+      "\"client_longitude\":" + json.escape(if(client.geo.longitude == 999.9, "null", client.geo.longitude)) + ", "
+      "\"client_ploss\":" + json.escape(client.socket.ploss) + ", "
+      "\"client_requests\":" + json.escape(client.requests) + ", "
+      "\"client_retrans\":" + json.escape(client.socket.tcpi_delta_retrans) + ", "
+      "\"client_rtt\":" + req.http.log-client:tcpi_rtt + ", "
+      "\"fastly_is_edge\":" + json.escape(if(fastly.ff.visits_this_service == 0, "true", "false")) + ", "
+      "\"fastly_is_shield\":" + json.escape(if(req.http.log-origin:shield == server.datacenter, "true", "false")) + ", "
+      "\"fastly_pop\":\"" + json.escape(server.datacenter) + "\", "
+      "\"fastly_server\":\"" + json.escape(server.hostname) + "\", "
+      "\"fastly_shield_used\":" + if(req.http.log-origin:shield, "\"" req.http.log-origin:shield "\"", "null") + ", "
+      "\"origin_host\":" + if(req.http.log-origin:host, "\"" + json.escape(req.http.log-origin:host) + "\"", "null") + ", "
+      "\"origin_ip\":" + if(req.http.log-origin:ip, "\"" + json.escape(req.http.log-origin:ip) + "\"", "null") + ", "
+      "\"origin_method\":" + if(req.http.log-origin:method, "\"" + json.escape(req.http.log-origin:method) + "\"", "null") + ", "
+      "\"origin_name\":" + if(req.http.log-origin:name, "\"" + json.escape(req.http.log-origin:name) + "\"", "null") + ", "
+      "\"origin_port\":" + if(req.http.log-origin:port, req.http.log-origin:port, "null") + ", "
+      "\"origin_reason\":" + if(req.http.log-origin:reason, "\"" + json.escape(req.http.log-origin:reason) + "\"", "null") + ", "
+      "\"origin_status\":" + if(req.http.log-origin:status, json.escape(req.http.log-origin:status), "null") + ", "
+      "\"origin_ttfb\":" + if(req.http.log-origin:ttfb == "NaN", "null", req.http.log-origin:ttfb) + ", "
+      "\"origin_ttlb\":" + if(req.http.log-origin:ttlb == "NaN", "null", req.http.log-origin:ttlb) + ", "
+      "\"origin_url\":" + if(req.http.log-origin:url, "\"" + json.escape(req.http.log-origin:url) + "\"", "null") + ", "
+      "\"request_host\":\"" + json.escape(req.http.log-request:host) + "\", "
+      "\"request_is_h2\":\"" + json.escape(if(fastly_info.is_h2, "true", "false")) + "\", "
+      "\"request_is_ipv6\":\"" + json.escape(if(req.is_ipv6, "true", "false")) + "\", "
+      "\"request_method\":\"" + json.escape(req.http.log-request:method) + "\", "
+      "\"request_referer\":" + if(req.http.referer, "\"" + json.escape(req.http.referer) + "\"", "null") + ", "
+      "\"request_tls_version\":\"" + json.escape(if(tls.client.protocol, tls.client.protocol, "")) + "\", "
+      "\"request_url\":\"" + json.escape(req.http.log-request:url) + "\", "
+      "\"request_user_agent\":" + if(req.http.user-agent, "\"" + json.escape(req.http.user-agent) + "\"", "null") + ", "
+      "\"response_age\":" + regsub(resp.http.Age, "\.000$", "") + ", "
+      "\"response_bytes_body\":" + resp.body_bytes_written + ", "
+      "\"response_bytes_header\":" + resp.header_bytes_written + ", "
+      "\"response_bytes\":" + resp.bytes_written + ", "
+      "\"response_cache_control\":" + if(resp.http.cache-control, "\"" + json.escape(resp.http.cache-control) + "\"", "null") + ", "
+      "\"response_completed\":\"" + if(resp.completed, "true", "false") + "\", "
+      "\"response_content_length\":" + if(resp.http.content-length, resp.http.content-length, "null") + ", "
+      "\"response_content_type\":" + if(resp.http.content-type, "\"" + json.escape(resp.http.content-type) + "\"", "null") + ", "
+      "\"response_reason\":" + if(resp.response, "\"" + json.escape(resp.response) + "\"", "null") + ", "
+      "\"response_state\":\"" + fastly_info.state + "\", "
+      "\"response_status\":" + resp.status + ", "
+      "\"response_ttfb\":" + req.http.log-response:ttfb + ", "
+      "\"response_ttl\":" + obj.ttl + ", "
+      "\"response_ttlb\":" + req.http.log-response:ttlb
+      " }";
 
 }
