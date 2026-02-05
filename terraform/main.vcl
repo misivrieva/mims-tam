@@ -101,16 +101,15 @@ sub vcl_fetch {
       set beresp.http.Cache-Control = "max-age=2592000, public";
     }
   }
- #try to deliver stale if you have it
   if (beresp.status >= 500 && beresp.status < 600) {
     if (stale.exists) {
-      return(deliver_stale);
+    return(deliver_stale);
     }
+  }   
 
-
-  call surrogate_keys;
-  return(deliver);
- }
+call surrogate_keys;
+return(deliver);
+ 
 } 
 
 sub vcl_error {
