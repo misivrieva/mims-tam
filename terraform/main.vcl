@@ -14,7 +14,7 @@ sub vcl_recv {
   if (req.restarts == 0) {
   unset req.http.restarts;
   unset req.http.try-alt-origin;
-  }  elsif (req.http.try-alt-origin) {
+  }  else if (req.http.try-alt-origin) {
   # Ensure clustering runs on restart!
   set req.http.Fastly-Force-Shield = "1";
   set req.backend = F_github_pages;
@@ -115,7 +115,7 @@ sub vcl_fetch {
   if (beresp.status >= 500 && beresp.status < 600) {
     if (stale.exists) {
     return(deliver_stale);
-    } elseif (http_status_matches(beresp.status, "500,502,503,504")
+    } else if (http_status_matches(beresp.status, "500,502,503,504")
         && req.backend.is_origin
         && !req.http.try-alt-origin
     ){
