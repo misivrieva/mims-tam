@@ -154,6 +154,10 @@ set resp.http.X-Mims = "mims";
   return(deliver);
 }
 
+sub vcl_log {
+  #FASTLY log
+}
+
 /* sub vcl_log {
 #FASTLY log    
 
