@@ -154,7 +154,7 @@ set resp.http.X-Mims = "mims";
   return(deliver);
 }
 
-sub vcl_log {
+/* sub vcl_log {
 #FASTLY log    
 
   set req.http.log-timing:log = time.elapsed.usec;
@@ -266,6 +266,6 @@ sub vcl_log {
       "\"response_ttfb\":" + req.http.log-response:ttfb + ", "
       "\"response_ttl\":" + obj.ttl + ", "
       "\"response_ttlb\":" + req.http.log-response:ttlb
-      " }";
+      " }"; */
 
 }
