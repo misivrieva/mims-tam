@@ -16,11 +16,11 @@ provider "fastly" {
   resource "fastly_service_vcl" "mims_tam" {
   name = "mims_tam_website"
 
-domain {
+  domain {
     name = "mims-tam-test.global.ssl.fastly.net"
   }
 
-backend {
+  backend {
     name                  = "http_me"
     address               = "http-me.glitch.me"
     port                  = 443
@@ -35,7 +35,6 @@ backend {
     between_bytes_timeout = 10000
     auto_loadbalance      = false
     shield = "lga-ny-us"
-
 
   }
 
@@ -58,11 +57,35 @@ backend {
   }
 
   force_destroy = false
-}
 
-dictionary {
-    name    = "basic_geofencing"" 
+  vcl {
+    name    = "my_main_vcl"
+    content = file("${path.module}/main.vcl")
+    main    = true
   }
+
+  vcl {
+    name    = "surrogate_keys_vcl"
+    content = file("${path.module}/surrogate_keys.vcl")
+  }  
+
+  dictionary {
+    name    = "basic_geofencing" 
+  }
+  }  
+
+resource "fastly_service_dictionary_items" "items" {
+  for_each = {
+  for d in fastly_service_vcl.mims_tam.dictionary : d.name => d if d.name == "basic_geofencing"
+  }
+  service_id = fastly_service_vcl.mims_tam.id
+  dictionary_id = each.value.dictionary_id
+
+  items = {
+    Germany: "block"
+    France: "block"
+  }
+}  
 
 logging_syslog {
   name        = "syslog"
