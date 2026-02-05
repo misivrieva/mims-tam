@@ -58,6 +58,16 @@ provider "fastly" {
 
     force_destroy = false
 
+    logging_syslog {
+    name               = "local_logging"
+    address            = "51.148.190.212"  # my IP
+    port               = 514           # standard syslog port
+    format             = "%h %l %u %t \"%r\" %>s %b"
+    format_version     = 2
+    message_type       = "classic"
+    response_condition = ""  # log all requests
+    }
+
     vcl {
       name    = "my_main_vcl"
       content = file("${path.module}/main.vcl")
@@ -86,15 +96,6 @@ resource "fastly_service_dictionary_items" "items" {
     France: "block"
   }
 }  
-
-logging_syslog {
-  name        = "syslog"
-  address     = "51.148.190.212"
-  port        = 514
-  message_type = "classic"
-  format_version = 2
-}
-
 
 output "service_id" {
   value = fastly_service_vcl.mims_tam.id

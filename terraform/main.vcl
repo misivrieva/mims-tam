@@ -20,7 +20,7 @@ sub vcl_recv {
   set req.http.Fastly-Force-Shield = "1";
   set req.backend = F_github_pages;
   set req.http.restarts = req.restarts;
-  set bereq.http.host = "misivrieva.github.io"
+  set bereq.http.host = "misivrieva.github.io";
 
   return(lookup)
   }
