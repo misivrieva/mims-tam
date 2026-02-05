@@ -72,12 +72,7 @@ provider "fastly" {
       name    = "my_main_vcl"
       content = file("${path.module}/main.vcl")
       main    = true
-    }
-
-    vcl {
-      name    = "surrogate_keys_vcl"
-      content = file("${path.module}/surrogate_keys.vcl")
-    }  
+    } 
 
     dictionary {
       name    = "basic_geofencing" 

@@ -115,6 +115,9 @@ call surrogate_keys;
 return(deliver);
 }
 
+sub vcl_log {
+  #FASTLY log
+}
 
 sub vcl_error {
 #FASTLY error
@@ -152,10 +155,6 @@ unset resp.http.x-be-method;
 unset resp.http.x-be-name;
 set resp.http.X-Mims = "mims";
   return(deliver);
-}
-
-sub vcl_log {
-  #FASTLY log
 }
 
 sub surrogate_keys {
