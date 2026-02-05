@@ -53,21 +53,23 @@ backend {
     first_byte_timeout    = 15000
     between_bytes_timeout = 10000
     auto_loadbalance      = false
-    request_condition = "Failover"
     shield = "london-uk"
 
   }
 
-  condition {
-    name      = "Failover"
-    type      = "REQUEST"
-    statement = "beresp.status >= 500 || beresp.status == 0"
-    priority  = 10
+  force_destroy = false
+}
+
+dictionary {
+    name    = "basic_geofencing"" 
   }
 
-
-
-  force_destroy = false
+logging_syslog {
+  name        = "syslog"
+  address     = "51.148.190.212"
+  port        = 514
+  message_type = "classic"
+  format_version = 2
 }
 
 
