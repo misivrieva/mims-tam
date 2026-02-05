@@ -14,64 +14,64 @@ provider "fastly" {
 
 # Create a Service
   resource "fastly_service_vcl" "mims_tam" {
-  name = "mims_tam_website"
+    name = "mims_tam_website"
 
-  domain {
-    name = "mims-tam-test.global.ssl.fastly.net"
+    domain {
+      name = "mims-tam-test.global.ssl.fastly.net"
   }
 
-  backend {
-    name                  = "http_me"
-    address               = "http-me.glitch.me"
-    port                  = 443
-    use_ssl               = true
-    ssl_cert_hostname     = "http-me.glitch.me"
-    ssl_sni_hostname      = "http-me.glitch.me"
-    ssl_check_cert        = true
-    override_host         = "http-me.glitch.me"
-    max_conn              = 200
-    connect_timeout       = 1000
-    first_byte_timeout    = 15000
-    between_bytes_timeout = 10000
-    auto_loadbalance      = false
-    shield = "lga-ny-us"
+    backend {
+      name                  = "http_me"
+      address               = "http-me.glitch.me"
+      port                  = 443
+      use_ssl               = true
+      ssl_cert_hostname     = "http-me.glitch.me"
+      ssl_sni_hostname      = "http-me.glitch.me"
+      ssl_check_cert        = true
+      override_host         = "http-me.glitch.me"
+      max_conn              = 200
+      connect_timeout       = 1000
+      first_byte_timeout    = 15000
+      between_bytes_timeout = 10000
+      auto_loadbalance      = false
+      shield = "lga-ny-us"
 
-  }
+    }
 
-  backend {
-    address               = "misivrieva.github.io"
-    name                  = "github_pages"
-    port                  = 443
-    use_ssl               = true
-    ssl_cert_hostname     = "misivrieva.github.io"
-    ssl_sni_hostname      = "misivrieva.github.io"
-    ssl_check_cert        = true
-    override_host         = "misivrieva.github.io"
-    max_conn              = 200
-    connect_timeout       = 1000
-    first_byte_timeout    = 15000
-    between_bytes_timeout = 10000
-    auto_loadbalance      = false
-    shield = "london-uk"
+    backend {
+      address               = "misivrieva.github.io"
+      name                  = "github_pages"
+      port                  = 443
+      use_ssl               = true
+      ssl_cert_hostname     = "misivrieva.github.io"
+      ssl_sni_hostname      = "misivrieva.github.io"
+      ssl_check_cert        = true
+      override_host         = "misivrieva.github.io"
+      max_conn              = 200
+      connect_timeout       = 1000
+      first_byte_timeout    = 15000
+      between_bytes_timeout = 10000
+      auto_loadbalance      = false
+      shield = "london-uk"
 
-  }
+    }
 
-  force_destroy = false
+    force_destroy = false
 
-  vcl {
-    name    = "my_main_vcl"
-    content = file("${path.module}/main.vcl")
-    main    = true
-  }
+    vcl {
+      name    = "my_main_vcl"
+      content = file("${path.module}/main.vcl")
+      main    = true
+    }
 
-  vcl {
-    name    = "surrogate_keys_vcl"
-    content = file("${path.module}/surrogate_keys.vcl")
-  }  
+    vcl {
+      name    = "surrogate_keys_vcl"
+      content = file("${path.module}/surrogate_keys.vcl")
+    }  
 
-  dictionary {
-    name    = "basic_geofencing" 
-  }
+    dictionary {
+      name    = "basic_geofencing" 
+    }
   }  
 
 resource "fastly_service_dictionary_items" "items" {
