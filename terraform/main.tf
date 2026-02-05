@@ -17,12 +17,9 @@ resource "fastly_service_vcl" "mims_tam" {
   name = "mims_tam_website"
 
 domain {
-    name = "mimsjustdoit.co.uk"
+    name = "misivrieva.github.io"
   }
 
-  domain {
-    name = "www.mimsjustdoit.co.uk"
-  }
 
   backend {
     address               = "misivrieva.github.io"
@@ -39,6 +36,7 @@ domain {
     between_bytes_timeout = 10000
     auto_loadbalance      = false
   }
+
 
   force_destroy = true
 }
