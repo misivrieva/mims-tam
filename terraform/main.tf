@@ -17,18 +17,18 @@ provider "fastly" {
     name = "mims_tam_website"
 
     domain {
-      name = "mims-tam-test.global.ssl.fastly.net"
+      name = "www.mimsjustdoit.co.uk"
   }
 
     backend {
-      name                  = "http_me"
-      address               = "http-me.glitch.me"
+      name                  = "medium"
+      address               = "msivrieva.medium.com"
       port                  = 443
       use_ssl               = true
-      ssl_cert_hostname     = "http-me.glitch.me"
-      ssl_sni_hostname      = "http-me.glitch.me"
+      ssl_cert_hostname     = "medium.com"
+      ssl_sni_hostname      = "medium.com"
       ssl_check_cert        = true
-      override_host         = "http-me.glitch.me"
+      override_host         = "msivrieva.medium.com"
       max_conn              = 200
       connect_timeout       = 1000
       first_byte_timeout    = 15000
@@ -36,6 +36,12 @@ provider "fastly" {
       auto_loadbalance      = false
       shield = "lga-ny-us"
 
+    }
+
+    healthcheck {
+      host = "medium.com"
+      name = "healthcheck for orign A"
+      path = "@msivrieva/health-check-3dfa55981553"
     }
 
     backend {
