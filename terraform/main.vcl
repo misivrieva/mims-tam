@@ -114,7 +114,7 @@ sub vcl_fetch {
   }
   if (beresp.status >= 500 && beresp.status < 600) {
     if (stale.exists) {
-    return(deliver_stale);
+      return(deliver_stale);
     } else if (http_status_matches(beresp.status, "500,502,503,504")
         && req.backend.is_origin
         && !req.http.try-alt-origin
