@@ -12,13 +12,16 @@ provider "fastly" {
   api_key = "HF0vQUudT2A7vrIgO2FOalJmJBit1GNI"
 }
 
+resource "fastly_domain_v1" "mims_domain" {
+    fqdn = "www.mimsjustdoit.co.uk"
+    service_id = fastly_service_vcl.mims_tam.id
+    #service_id = "fb2A8UG0gGgu6SqVkjwOCt"
+    description = "This is my test domain."
+}
+
 # Create a Service
   resource "fastly_service_vcl" "mims_tam" {
     name = "mims_tam_website"
-
-    domain {
-      name = "www.mimsjustdoit.co.uk"
-  }
 
     backend {
       name                  = "medium"
@@ -94,8 +97,6 @@ resource "fastly_service_dictionary_items" "items" {
   dictionary_id = each.value.dictionary_id
 
   items = {
-    Germany: "block"
-    France: "block"
   }
 }  
 
