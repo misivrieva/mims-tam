@@ -1,0 +1,47 @@
+{
+  "version": 4,
+  "terraform_version": "1.14.4",
+  "serial": 57,
+  "lineage": "765c3b3a-296e-6ac2-43c2-51520330efe9",
+  "outputs": {
+    "active_version": {
+      "value": 35,
+      "type": "number"
+    },
+    "service_id": {
+      "value": "fb2A8UG0gGgu6SqVkjwOCt",
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "mode": "managed",
+      "type": "fastly_service_dictionary_items",
+      "name": "items",
+      "provider": "provider[\"registry.terraform.io/fastly/fastly\"]",
+      "instances": [
+        {
+          "index_key": "basic_geofencing",
+          "schema_version": 0,
+          "attributes": {
+            "dictionary_id": "qc3UCgTwGrTD86u45Or6I1",
+            "id": "fb2A8UG0gGgu6SqVkjwOCt/qc3UCgTwGrTD86u45Or6I1",
+            "items": {
+              "France": "block",
+              "Germany": "block"
+            },
+            "manage_items": false,
+            "service_id": "fb2A8UG0gGgu6SqVkjwOCt"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "fastly_service_vcl.mims_tam"
+          ]
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}

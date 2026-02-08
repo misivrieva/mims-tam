@@ -7,6 +7,11 @@ terraform {
   }
 }
 
+variable "mydict_name" {
+  type = string
+  default = "basic_geofencing"
+}
+
 # Configure the Fastly Provider
 provider "fastly" {
   api_key = "HF0vQUudT2A7vrIgO2FOalJmJBit1GNI"
@@ -24,27 +29,28 @@ resource "fastly_domain_v1" "mims_domain" {
     name = "mims_tam_website"
 
     backend {
-      name                  = "medium"
-      address               = "msivrieva.medium.com"
+      name                  = "aws s3"
+      address               = "http://mims-ce-demo-site.s3-website.eu-north-1.amazonaws.com"
       port                  = 443
       use_ssl               = true
-      ssl_cert_hostname     = "medium.com"
-      ssl_sni_hostname      = "medium.com"
+      ssl_cert_hostname     = "mims-ce-demo-site.s3-website.eu-north-1.amazonaws.com"
+      ssl_sni_hostname      = "mims-ce-demo-site.s3-website.eu-north-1.amazonaws.com"
       ssl_check_cert        = true
-      override_host         = "msivrieva.medium.com"
+      override_host         = "mims-ce-demo-site.s3-website.eu-north-1.amazonaws.com"
       max_conn              = 200
       connect_timeout       = 1000
       first_byte_timeout    = 15000
       between_bytes_timeout = 10000
       auto_loadbalance      = false
+      healthcheck           = "healthcheck for aws"
       shield = "lga-ny-us"
 
     }
 
     healthcheck {
-      host = "medium.com"
-      name = "healthcheck for orign A"
-      path = "@msivrieva/health-check-3dfa55981553"
+      host = "mims-ce-demo-site.s3-website.eu-north-1.amazonaws.com"
+      name = "healthcheck for aws"
+      path = "/healthcheck.txt"
     }
 
     backend {
@@ -61,9 +67,56 @@ resource "fastly_domain_v1" "mims_domain" {
       first_byte_timeout    = 15000
       between_bytes_timeout = 10000
       auto_loadbalance      = false
-      shield = "london-uk"
+      shield                = "london-uk"
+      request_condition     = "shield for GH"
 
     }
+
+    condition {
+      name      = "shield for GH"
+      type      = "REQUEST"
+      statement = "false"
+      priority  = 10
+  }
+    condition {
+      name = "shield for aws"
+      type = "REQUEST"
+      statement = "true"
+      priority = 15
+    }
+
+    condition {
+      name = "failover"
+      type = "REQUEST"
+      statement = "!req.backend.healthy"
+      priority = 9
+    }
+
+    condition {
+      name = "URL after failover"
+      type = "REQUEST"
+      statement = "req.backend == F_github_pages"
+      priority = 20
+    }
+
+    header {
+      name = "URL rewrite"
+      action = "set"
+      type = "request"
+      destination = "url"
+      source = "\"/\""
+      request_condition = "URL after failover"
+    }
+
+    header {
+      name        = "Backend Selection"
+      action      = "set"
+      type        = "request"
+      destination = "backend"
+      source      = "F_github_pages"
+      request_condition = "failover"
+    }
+
 
     force_destroy = false
 
@@ -84,14 +137,14 @@ resource "fastly_domain_v1" "mims_domain" {
     } 
 
     dictionary {
-      name    = "basic_geofencing" 
+      name    =  var.mydict_name
       write_only = false
     }
   }  
 
 resource "fastly_service_dictionary_items" "items" {
   for_each = {
-  for d in fastly_service_vcl.mims_tam.dictionary : d.name => d if d.name == "basic_geofencing"
+    for d in fastly_service_vcl.mims_tam.dictionary : d.name => d if d.name == var.mydict_name
   }
   service_id = fastly_service_vcl.mims_tam.id
   dictionary_id = each.value.dictionary_id

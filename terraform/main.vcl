@@ -6,21 +6,7 @@ sub vcl_recv {
   if (req.method != "HEAD" && req.method != "GET" && req.method != "FASTLYPURGE") {
     return(pass);
   }
-  #default, go to bin 
-  set req.backend = F_http_me;
-  set req.http.host = "http-me.glitch.me";
 
-
-  if (req.restarts == 0) {
-  unset req.http.restarts;
-  unset req.http.try-alt-origin;
-  }  else if (req.http.try-alt-origin) {
-  # Ensure clustering runs on restart!
-  set req.http.Fastly-Force-Shield = "1";
-  set req.backend = F_github_pages;
-  set req.http.restarts = req.restarts;
-  return(lookup);
-  }
 
   #basic_geofencing in action 
 
@@ -51,16 +37,7 @@ sub vcl_hit {
 sub vcl_miss {
 #FASTLY miss
 
-if (req.backend.is_origin) {
-  if (req.http.try-alt-origin) {
-    set bereq.url = "/status/200"; # Success path
-  } else {
-    set bereq.url = "/status/503"; # Failing path
-  }
-}
-if (req.restarts > 0) {
-set bereq.http.host = "misivrieva.github.io";
-}
+
 
   return(fetch);
 }

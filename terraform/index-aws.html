@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Theme Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .image-container {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%);
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+
+        .image-placeholder {
+            color: white;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        p {
+            color: #555;
+            line-height: 1.6;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome</h1>
+        
+        <div class="image-container">
+            <img src="https://mims-ce-demo-site.s3.eu-north-1.amazonaws.com/PXL_20260207_220535701.jpg" alt="Summer" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        
+        <p>A simple pet page with a purple theme. This is Summer.</p>
+    </div>
+</body>
+</html>
