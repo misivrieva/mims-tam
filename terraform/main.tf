@@ -29,14 +29,14 @@ resource "fastly_domain_v1" "mims_domain" {
     name = "mims_tam_website"
 
     backend {
-      name                  = "aws s3"
-      address               = "http://mims-ce-demo-site.s3-website.eu-north-1.amazonaws.com"
+      name                  = "aws"
+      address               = "mims-ce-demo-site.s3.eu-north-1.amazonaws.com"
       port                  = 443
       use_ssl               = true
-      ssl_cert_hostname     = "mims-ce-demo-site.s3-website.eu-north-1.amazonaws.com"
-      ssl_sni_hostname      = "mims-ce-demo-site.s3-website.eu-north-1.amazonaws.com"
+      ssl_cert_hostname     = "mims-ce-demo-site.s3.eu-north-1.amazonaws.com"
+      ssl_sni_hostname      = "mims-ce-demo-site.s3.eu-north-1.amazonaws.com"
       ssl_check_cert        = true
-      override_host         = "mims-ce-demo-site.s3-website.eu-north-1.amazonaws.com"
+      override_host         = "mims-ce-demo-site.s3.eu-north-1.amazonaws.com"
       max_conn              = 200
       connect_timeout       = 1000
       first_byte_timeout    = 15000
@@ -48,9 +48,10 @@ resource "fastly_domain_v1" "mims_domain" {
     }
 
     healthcheck {
-      host = "mims-ce-demo-site.s3-website.eu-north-1.amazonaws.com"
+      host = "mims-ce-demo-site.s3.eu-north-1.amazonaws.com"
       name = "healthcheck for aws"
       path = "/healthcheck.txt"
+      check_interval = 1000
     }
 
     backend {
@@ -92,21 +93,21 @@ resource "fastly_domain_v1" "mims_domain" {
       priority = 9
     }
 
-    condition {
-      name = "URL after failover"
-      type = "REQUEST"
-      statement = "req.backend == F_github_pages"
-      priority = 20
-    }
+    # condition {
+    #   name = "URL after failover"
+    #   type = "REQUEST"
+    #   statement = "req.backend == F_github_pages"
+    #   priority = 20
+    # }
 
-    header {
-      name = "URL rewrite"
-      action = "set"
-      type = "request"
-      destination = "url"
-      source = "\"/\""
-      request_condition = "URL after failover"
-    }
+    # header {
+    #   name = "URL rewrite"
+    #   action = "set"
+    #   type = "request"
+    #   destination = "url"
+    #   source = "\"/\""
+    #   request_condition = "URL after failover"
+    # }
 
     header {
       name        = "Backend Selection"

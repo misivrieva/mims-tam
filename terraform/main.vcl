@@ -6,8 +6,16 @@ sub vcl_recv {
   if (req.method != "HEAD" && req.method != "GET" && req.method != "FASTLYPURGE") {
     return(pass);
   }
+  #rewrite the url to account for s3 internals
+  if (req.backend == F_aws && req.url == "/" ){
+    set req.url = "/index-aws.html";
+  }
 
+  #fetch the laning page from GH
 
+  if (req.backend == F_github_pages && req.url == "/" ){
+    set req.url = "/index.html";
+  }
   #basic_geofencing in action 
 
   # Check if the client's country is in the blocklist
@@ -17,7 +25,6 @@ sub vcl_recv {
   if (var.country_status == "block") {
     error 403 "Access denied from your country";
   }
-
 
   return(lookup);
 }
@@ -37,18 +44,29 @@ sub vcl_hit {
 sub vcl_miss {
 #FASTLY miss
 
-
+if (req.backend == F_github_pages){
+  set bereq.url = "/mims-tam" + req.url;
+}
 
   return(fetch);
 }
 
 sub vcl_pass {
 #FASTLY pass
+
+if (req.backend == F_github_pages){
+  set bereq.url = "/mims-tam" + req.url;
+}
   return(pass);
 }
 
+
 sub vcl_fetch {
 #FASTLY fetch
+  set beresp.ttl = 5s;
+  set beresp.http.Cache-Control = "max-age=5";
+
+  call surrogate_keys;
 
   # Unset headers that reduce cacheability for images processed using the Fastly image optimizer
   if (req.http.X-Fastly-Imageopto-Api) {
@@ -88,23 +106,9 @@ sub vcl_fetch {
       set beresp.ttl = 2592000s; # 30 days
       set beresp.http.Cache-Control = "max-age=2592000, public";
     }
-  }
-  if (beresp.status >= 500 && beresp.status < 600) {
-    if (stale.exists) {
-      return(deliver_stale);
-    } else if (http_status_matches(beresp.status, "500,502,503,504")
-        && req.backend.is_origin
-        && !req.http.try-alt-origin
-    ){
-        set beresp.http.Vary:restarts = ""; # Add restart to vary key
-        set beresp.cacheable = true; # Errors are not cacheable by default, so enable them
-        set beresp.ttl = 5s; # Set a short ttl so the unfindable object expires quickly
-        set beresp.http.do_failover = "yes";
-    }
-    return(deliver);
-  }   
+  }  
 
-call surrogate_keys;
+
 return(deliver);
 }
 
@@ -152,25 +156,6 @@ set resp.http.X-Mims = "mims";
 
 sub surrogate_keys {
 
-set beresp.http.surrogate-key = req.url.basename;
-
-  # Match last segment: 
-  if (req.url.path ~ "^.*/([^/]+)$") {
-    # re.group.1 = full-path 
-    set beresp.http.Surrogate-Key = re.group.1;
-  }
-
-  # Match last two segments: y and z
-  if (req.url.path ~ "^.*/([^/]+)/([^/]+)$") {
-  if (std.strstr(beresp.http.Surrogate-Key, re.group.1)) {
-      # Do nothing. Accounts for shielding.
-    }
-    else 
-    {
-           if (!re.group.2) { goto surrogate_1; }
-
-            surrogate_2: set beresp.http.Surrogate-Key = beresp.http.Surrogate-Key " " re.group.2;
-            surrogate_1: set beresp.http.Surrogate-Key = beresp.http.Surrogate-Key " " re.group.1;
-    } 
-  }
+set beresp.http.Surrogate-key = regsub(req.url, "^/([^/]+).*", "\1");
+set beresp.http.Surrogate-key = beresp.http.Surrogate-key + " " + regsub(req.url.basename, "([^\.]+)\..*", "\1");
 }
