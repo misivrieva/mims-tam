@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Release Engineering at Scale — Mims Just Do It</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0F1923; --bg2: #141F2B; --bg3: #1A2A3A;
+      --teal: #2A7C6F; --teal-light: #3AACA0; --teal-pale: rgba(42,124,111,0.12);
+      --text: #C8E0DC; --text-muted: #5A8A84; --text-dim: #2A5A54;
+      --border: #1A3530; --accent: #E8890C; --white: #EEF6F4;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    nav {
+      border-bottom: 1px solid var(--border); padding: 0 2rem; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; background: rgba(15,25,35,0.95); backdrop-filter: blur(8px); z-index: 100;
+    }
+    .nav-logo { font-family: 'DM Mono', monospace; font-size: 0.95rem; color: var(--teal-light); text-decoration: none; }
+    .nav-logo span { color: var(--text-muted); }
+    nav ul { list-style: none; display: flex; gap: 2rem; }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: 0.88rem; transition: color 0.2s; }
+    nav a:hover { color: var(--teal-light); }
+    .nav-status { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--teal); border: 1px solid var(--border); padding: 0.25rem 0.7rem; border-radius: 20px; display: flex; align-items: center; gap: 0.4rem; }
+    .status-dot { width: 6px; height: 6px; background: var(--teal-light); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .breadcrumb { max-width: 800px; margin: 1.5rem auto; padding: 0 2rem; font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--text-dim); }
+    .breadcrumb a { color: var(--teal); text-decoration: none; }
+
+    .article { max-width: 800px; margin: 0 auto; padding: 0 2rem 5rem; }
+    .article-header { padding: 2rem 0 3rem; border-bottom: 1px solid var(--border); margin-bottom: 3rem; }
+    .article-tag { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--teal); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem; }
+    .article-tag::before { content: '//'; color: var(--text-dim); }
+    h1 { font-size: 2.6rem; font-weight: 600; color: var(--white); line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 1rem; }
+    .article-meta { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--text-dim); display: flex; gap: 2rem; margin-bottom: 1.5rem; }
+    .article-intro { font-size: 1.1rem; color: var(--text-muted); line-height: 1.75; }
+    .hero-img { width: 100%; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 3rem; }
+
+    .article-body h2 { font-size: 1.4rem; font-weight: 600; color: var(--white); margin: 2.5rem 0 1rem; }
+    .article-body p { color: var(--text-muted); line-height: 1.8; margin-bottom: 1.25rem; font-size: 0.97rem; }
+    .article-body ul { list-style: none; margin: 1rem 0 1.5rem 0; display: flex; flex-direction: column; gap: 0.5rem; }
+    .article-body li { font-size: 0.95rem; color: var(--text-muted); display: flex; gap: 0.6rem; }
+    .article-body li::before { content: '→'; color: var(--teal); flex-shrink: 0; font-family: 'DM Mono', monospace; }
+
+    .tech-stack { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin: 2rem 0; }
+    .tech-stack-title { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--teal); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1rem; }
+    .tech-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .tech-tag { font-family: 'DM Mono', monospace; font-size: 0.78rem; border: 1px solid var(--border); color: var(--text-muted); padding: 0.3rem 0.7rem; border-radius: 4px; }
+
+    .surr-key {
+      margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
+      background: var(--teal-pale); border-radius: 8px; padding: 1rem 1.2rem;
+      font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--teal-light);
+    }
+    .surr-key .label { font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+
+    footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+    footer a { color: var(--teal); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/index-aws.html" class="nav-logo">mims<span>justdoit</span>.co.uk</a>
+  <ul>
+    <li><a href="/work/release-engineering.html">Work</a></li>
+    <li><a href="/blog/adhd-at-work.html">Writing</a></li>
+    <li><a href="mailto:hello@mimsjustdoit.co.uk">Contact</a></li>
+  </ul>
+  <div class="nav-status"><span class="status-dot"></span>served by fastly</div>
+</nav>
+
+<div class="breadcrumb">
+  <a href="/index-aws.html">home</a> / <a href="/work/release-engineering.html">work</a> / release-engineering
+</div>
+
+<article class="article">
+  <div class="article-header">
+    <div class="article-tag">work · fastly</div>
+    <h1>Release Engineering at Scale</h1>
+    <div class="article-meta">
+      <span>2019 – present</span>
+      <span>Fastly</span>
+      <span>Senior Release Engineer</span>
+    </div>
+    <p class="article-intro">Maintaining the infrastructure for 20% of global internet traffic.</p>
+  </div>
+
+  <img src="/images/release-engineering.jpg" alt="Release Engineering Pipeline" class="hero-img">
+
+  <div class="article-body">
+    <p>Release engineering at Fastly isn't just shipping code — it's managing the infrastructure that gets that code to the edge safely, quickly, and with the ability to rollback swiftly if something goes wrong. I've spent six years building and improving that system.</p>
+
+    <div class="tech-stack">
+      <div class="tech-stack-title">// tech stack</div>
+      <div class="tech-tags">
+        <span class="tech-tag">Terraform</span>
+        <span class="tech-tag">VCL</span>
+        <span class="tech-tag">Fastly API</span>
+        <span class="tech-tag">Python</span>
+        <span class="tech-tag">CI/CD</span>
+        <span class="tech-tag">Origin shielding</span>
+        <span class="tech-tag">Edge dictionaries</span>
+        <span class="tech-tag">Surrogate keys</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="surr-key">
+    <div class="label">// surrogate-key</div>
+    Surrogate-key: work release-engineering
+  </div>
+</article>
+
+<footer>
+  mimsjustdoit.co.uk · served via <a href="#">Fastly</a> · built with VCL & Terraform
+</footer>
+
+</body>
+</html>
