@@ -14,7 +14,7 @@ sub vcl_recv {
   #fetch the laning page from GH
 
   if (req.backend == F_github_pages && req.url == "/" ){
-    set req.url = "/index.html";
+    set req.url = "/mims-tam/index.html"; # double mims-tam
   }
   #basic_geofencing in action 
 

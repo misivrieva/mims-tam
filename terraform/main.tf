@@ -7,7 +7,7 @@ terraform {
   }
 }
 
-variable "mydict_name" {
+variable "mydict_geo" {
   type = string
   default = "basic_geofencing"
 }
@@ -42,17 +42,16 @@ resource "fastly_domain_v1" "mims_domain" {
       first_byte_timeout    = 15000
       between_bytes_timeout = 10000
       auto_loadbalance      = false
-      healthcheck           = "healthcheck for aws"
       shield = "lga-ny-us"
 
     }
 
-    healthcheck {
+     healthcheck {
       host = "mims-ce-demo-site.s3.eu-north-1.amazonaws.com"
-      name = "healthcheck for aws"
-      path = "/healthcheck.txt"
-      check_interval = 1000
-    }
+       name = "healthcheck for aws"
+       path = "/healthcheck.txt"
+       check_interval = 10000
+     }
 
     backend {
       address               = "misivrieva.github.io"
@@ -138,14 +137,14 @@ resource "fastly_domain_v1" "mims_domain" {
     } 
 
     dictionary {
-      name    =  var.mydict_name
+      name    =  var.mydict_geo
       write_only = false
     }
   }  
 
 resource "fastly_service_dictionary_items" "items" {
   for_each = {
-    for d in fastly_service_vcl.mims_tam.dictionary : d.name => d if d.name == var.mydict_name
+    for d in fastly_service_vcl.mims_tam.dictionary : d.name => d if d.name == var.mydict_geo
   }
   service_id = fastly_service_vcl.mims_tam.id
   dictionary_id = each.value.dictionary_id
