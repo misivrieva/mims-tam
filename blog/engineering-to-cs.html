@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Technical Advantage: Engineer to CS — Mims Just Do It</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500;600&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0F1923; --bg2: #141F2B; --bg3: #1A2A3A;
+      --teal: #2A7C6F; --teal-light: #3AACA0; --teal-pale: rgba(42,124,111,0.12);
+      --text: #C8E0DC; --text-muted: #5A8A84; --text-dim: #2A5A54;
+      --border: #1A3530; --accent: #E8890C; --white: #EEF6F4;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    nav { border-bottom: 1px solid var(--border); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: rgba(15,25,35,0.95); backdrop-filter: blur(8px); z-index: 100; }
+    .nav-logo { font-family: 'DM Mono', monospace; font-size: 0.95rem; color: var(--teal-light); text-decoration: none; }
+    .nav-logo span { color: var(--text-muted); }
+    nav ul { list-style: none; display: flex; gap: 2rem; }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: 0.88rem; transition: color 0.2s; }
+    nav a:hover { color: var(--teal-light); }
+    .nav-status { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--teal); border: 1px solid var(--border); padding: 0.25rem 0.7rem; border-radius: 20px; display: flex; align-items: center; gap: 0.4rem; }
+    .status-dot { width: 6px; height: 6px; background: var(--teal-light); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .breadcrumb { max-width: 720px; margin: 1.5rem auto; padding: 0 2rem; font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--text-dim); }
+    .breadcrumb a { color: var(--teal); text-decoration: none; }
+    .article { max-width: 720px; margin: 0 auto; padding: 0 2rem 5rem; }
+    .article-header { padding: 2rem 0 2.5rem; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
+    .article-tag { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--teal); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem; }
+    .article-tag::before { content: '//'; color: var(--text-dim); }
+    h1 { font-size: 2.4rem; font-weight: 600; color: var(--white); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1rem; }
+    .article-meta { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--text-dim); display: flex; gap: 2rem; margin-bottom: 1.5rem; }
+    .article-intro { font-size: 1.08rem; color: var(--text-muted); line-height: 1.8; font-family: 'Lora', serif; }
+    .hero-img { width: 100%; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 2.5rem; }
+    .article-body h2 { font-size: 1.3rem; font-weight: 600; color: var(--white); margin: 2.5rem 0 0.9rem; }
+    .article-body p { color: var(--text-muted); line-height: 1.85; margin-bottom: 1.25rem; font-size: 0.97rem; }
+    .article-body ul { list-style: none; margin: 1rem 0 1.5rem 0; display: flex; flex-direction: column; gap: 0.5rem; }
+    .article-body li { font-size: 0.95rem; color: var(--text-muted); display: flex; gap: 0.6rem; padding-left: 0.5rem; }
+    .article-body li::before { content: '→'; color: var(--teal); flex-shrink: 0; font-family: 'DM Mono', monospace; }
+    blockquote { border-left: 3px solid var(--teal); padding: 0.5rem 0 0.5rem 1.5rem; margin: 2rem 0; }
+    blockquote p { font-family: 'Lora', serif; font-style: italic; font-size: 1.08rem; color: var(--text); margin: 0; }
+    .surr-key { margin-top: 3rem; background: var(--teal-pale); border-radius: 8px; padding: 1rem 1.2rem; font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--teal-light); }
+    .surr-key .label { font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+    footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+    footer a { color: var(--teal); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/index-aws.html" class="nav-logo">mims<span>justdoit</span>.co.uk</a>
+  <ul>
+    <li><a href="/work/release-engineering.html">Work</a></li>
+    <li><a href="/blog/adhd-at-work.html">Writing</a></li>
+    <li><a href="mailto:hello@mimsjustdoit.co.uk">Contact</a></li>
+  </ul>
+  <div class="nav-status"><span class="status-dot"></span>served by fastly</div>
+</nav>
+
+<div class="breadcrumb">
+  <a href="/index-aws.html">home</a> / <a href="/blog/adhd-at-work.html">blog</a> / engineering-to-cs
+</div>
+
+<article class="article">
+  <div class="article-header">
+    <div class="article-tag">blog · career</div>
+    <h1>The Technical Advantage: Engineer to CS</h1>
+    <div class="article-meta">
+      <span>6 min read</span>
+      <span>Mims Sivrieva</span>
+    </div>
+    <p class="article-intro">Engineers who move into product roles often feel pressure to leave their technical identity behind. I think that's exactly backwards. Here's why your engineering background is your biggest asset — if you use it right.</p>
+  </div>
+
+  <img src="/images/engineering-to-cs.jpg" alt="Engineering to CS" class="hero-img">
+
+  <div class="article-body">
+    <h2>The thing people get wrong</h2>
+    <p>There's a common narrative that going from engineering to product management is a shift from "making things" to "deciding what to make". That framing sets you up to abandon the most valuable thing you bring: the ability to reason precisely about what is and isn't technically feasible, and why.</p>
+    <p>The best PMs I've worked with don't just prioritise features — they shape the problem space with enough technical understanding to push back on solutions, spot second-order effects, and protect engineering teams from well-intentioned but structurally impossible asks.</p>
+
+    <blockquote>
+      <p>Technical fluency in product isn't about writing code. It's about having enough context to ask the right questions — and to know when an answer doesn't add up.</p>
+    </blockquote>
+
+    <h2>What engineering gives you</h2>
+    <ul>
+      <li>An intuition for complexity — you can feel when something is deceptively simple or expensively fragile</li>
+      <li>Credibility with engineering teams — they'll tell you more when they trust you understand the stakes</li>
+      <li>A bias for specificity — "fast" means nothing; "p95 latency under 200ms" means something</li>
+      <li>Comfort with ambiguity and iteration — you've debugged enough unknown systems to know that the first diagnosis is rarely the right one</li>
+    </ul>
+
+    <h2>The TAM as a bridge</h2>
+    <p>Technical Account Management sits at exactly this intersection. You're customer-facing enough to understand business problems, and technical enough to map them to platform capabilities — and to know the limits of those capabilities honestly. That requires the same muscles as good product thinking: systems reasoning, stakeholder management, and the ability to translate between technical and business language without losing precision in either direction.</p>
+    <p>It's also where I've found the most interesting problems. Not "build this feature" or "fix this bug", but "help this customer get more value from infrastructure they've already committed to" — which requires understanding both the customer's business and the platform deeply enough to find the gap.</p>
+
+    <h2>What you have to let go of</h2>
+    <p>The hardest adjustment isn't learning new skills — it's unlearning the instinct to personally fix things. In engineering, you write the code. In product and TAM roles, you're often in the position of enabling others to write it, or helping customers use code that's already been written. The output is the same quality outcome; the path is entirely different.</p>
+    <p>For engineers used to direct feedback loops — write, run, see result — this takes conscious adjustment. But the skills transfer almost completely. You're still debugging. The system is just larger, and some of the components are people.</p>
+  </div>
+
+  <div class="surr-key">
+    <div class="label">// surrogate-key</div>
+    Surrogate-key: blog engineering-to-cs
+  </div>
+</article>
+
+<footer>
+  mimsjustdoit.co.uk · served via <a href="#">Fastly</a> · built with VCL & Terraform
+</footer>
+
+</body>
+</html>
